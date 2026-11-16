@@ -33,4 +33,9 @@ public interface StudentEnrollmentRepository
             Integer academicYear,
             Integer semester
     );
+
+    Optional<StudentEnrollment> findFirstByStudent_IdAndStatusOrderByCreatedAtDesc(
+            Long studentId,
+            EnrollmentStatus status
+    );
 }

@@ -96,12 +96,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // Only login endpoints are public
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/api/auth/student/login",
-                                        "/api/auth/admin/login",
-                                        "/api/auth/student/activate"
-                                ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/auth/student/login",
+                                "/api/auth/admin/login",
+                                "/api/auth/student/activate",
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
+                        ).permitAll()
 
                         .requestMatchers("/actuator/health").permitAll()
 
@@ -113,6 +115,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/staff/**")
                         .hasAnyRole("STAFF", "COLLEGE_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/student/**").hasRole("STUDENT")
 
                         // Everything else requires authentication
                         .anyRequest().authenticated()

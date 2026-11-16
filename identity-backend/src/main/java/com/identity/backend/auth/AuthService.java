@@ -3,6 +3,7 @@ package com.identity.backend.auth;
 
 import com.identity.backend.auth.dto.AdminLoginRequest;
 import com.identity.backend.auth.dto.LoginResponse;
+import com.identity.backend.auth.dto.RefreshTokenRotation;
 import com.identity.backend.auth.dto.StudentLoginRequest;
 import com.identity.backend.college.College;
 import com.identity.backend.college.CollegeRepository;
@@ -13,12 +14,14 @@ import com.identity.backend.user.User;
 import com.identity.backend.user.UserRepository;
 import com.identity.backend.user.UserRole;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -26,22 +29,9 @@ public class AuthService {
     private final CollegeRepository collegeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(
-            UserRepository userRepository,
-            StudentRepository studentRepository,
-            CollegeRepository collegeRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService
-    ) {
-        this.userRepository = userRepository;
-        this.studentRepository = studentRepository;
-        this.collegeRepository = collegeRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-    }
-
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse studentLogin(StudentLoginRequest request) {
 
         College college = collegeRepository
@@ -64,7 +54,7 @@ public class AuthService {
         return authenticate(user, request.password(), college.getId());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResponse adminLogin(AdminLoginRequest request) {
 
         User user = userRepository
@@ -82,6 +72,34 @@ public class AuthService {
                 : null;
 
         return authenticate(user, request.password(), collegeId);
+    }
+
+    public LoginResponse refresh(String rawRefreshToken) {
+
+        RefreshTokenRotation rotation =
+                refreshTokenService.rotateRefreshToken(rawRefreshToken);
+
+        User user = rotation.user();
+
+        String newAccessToken = jwtService.generateToken(
+                user,
+                rotation.collegeId()
+        );
+
+        return new LoginResponse(
+                newAccessToken,
+                rotation.refreshToken(),
+                "Bearer",
+                jwtService.getExpirationSeconds(),
+                user.getId(),
+                user.getFullName(),
+                user.getRole(),
+                rotation.collegeId()
+        );
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRefreshToken(refreshToken);
     }
 
     private LoginResponse authenticate(
@@ -102,10 +120,17 @@ public class AuthService {
             throw invalidCredentials();
         }
 
-        String token = jwtService.generateToken(user, collegeId);
+        String accessToken = jwtService.generateToken(
+                user,
+                collegeId
+        );
+
+        String refreshToken =
+                refreshTokenService.createRefreshToken(user);
 
         return new LoginResponse(
-                token,
+                accessToken,
+                refreshToken,
                 "Bearer",
                 jwtService.getExpirationSeconds(),
                 user.getId(),

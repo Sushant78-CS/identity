@@ -3,6 +3,7 @@ package com.identity.backend.auth;
 
 import com.identity.backend.auth.dto.AdminLoginRequest;
 import com.identity.backend.auth.dto.LoginResponse;
+import com.identity.backend.auth.dto.RefreshTokenRequest;
 import com.identity.backend.auth.dto.StudentLoginRequest;
 import com.identity.backend.auth.security.AuthenticatedUser;
 
@@ -49,5 +50,23 @@ public class AuthController {
                 AuthenticatedUser.from(jwt);
 
         return ResponseEntity.ok(authenticatedUser);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        return ResponseEntity.ok(
+                authService.refresh(request.refreshToken())
+        );
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        authService.logout(request.refreshToken());
+
+        return ResponseEntity.noContent().build();
     }
 }
