@@ -62,6 +62,9 @@ public class Student {
     @Column(nullable = false)
     private Integer admissionYear;
 
+    @Column(name = "profile_image_url", length = 500)
+    private String profileImageUrl;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
