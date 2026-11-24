@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  Building2,
-  CalendarDays,
   ChevronRight,
-  GraduationCap,
-  IdCard,
-  Info,
   QrCode,
   ShieldCheck,
   UserRound,
@@ -22,7 +17,7 @@ import {
   StudentQrBottomSheet,
   VerificationQrStatus,
 } from "@/features/digital-id/components/StudentQrBottomSheet";
-import { DEMO_STUDENT_CREDENTIAL } from "@/features/digital-id/constants/demo-credential";
+// import { DEMO_STUDENT_CREDENTIAL } from "@/features/digital-id/constants/demo-credential";
 import {
   DigitalIdQrService,
   getQrErrorMessage,
@@ -38,7 +33,17 @@ export default function StudentIdScreen() {
   const { theme, isDark } = useAppTheme();
   const colors = theme.colors;
 
+  // const studentProfile = useAuthStore((state) => state.studentProfile);
+
   const studentProfile = useAuthStore((state) => state.studentProfile);
+  const user = useAuthStore((state) => state.user);
+
+  const studentName = studentProfile?.fullName ?? user?.fullName ?? "Student";
+
+  const studentId =
+    studentProfile?.studentId ?? user?.studentId ?? "Not available";
+
+  const collegeName = studentProfile?.college?.name ?? "Not available";
 
   const [qrSheetVisible, setQrSheetVisible] = useState(false);
   const [qrStatus, setQrStatus] = useState<VerificationQrStatus>("loading");
@@ -62,11 +67,6 @@ export default function StudentIdScreen() {
   const setTabBarVisible = useTabBarStore((state) => state.setVisible);
 
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const user = useAuthStore((state) => state.user);
-
-  const studentName = user?.fullName ?? "Student";
-  const studentId = user?.studentId ?? "Not available";
 
   const clearScrollTimeout = () => {
     if (scrollTimeout.current) {
@@ -130,29 +130,6 @@ export default function StudentIdScreen() {
   // ------------------------------------------------
   // Credential details
   // ------------------------------------------------
-
-  const credentialDetails = [
-    {
-      label: "College",
-      value: DEMO_STUDENT_CREDENTIAL.collegeName,
-      icon: Building2,
-    },
-    {
-      label: "Course",
-      value: DEMO_STUDENT_CREDENTIAL.course,
-      icon: GraduationCap,
-    },
-    {
-      label: "Department",
-      value: DEMO_STUDENT_CREDENTIAL.department,
-      icon: IdCard,
-    },
-    {
-      label: "Academic year",
-      value: DEMO_STUDENT_CREDENTIAL.academicYear,
-      icon: CalendarDays,
-    },
-  ];
 
   const generateStudentQr = useCallback(async () => {
     if (qrRequestInFlight.current) return;
@@ -368,14 +345,14 @@ export default function StudentIdScreen() {
                 style={{ color: heroText }}
                 numberOfLines={2}
               >
-                {DEMO_STUDENT_CREDENTIAL.studentName}
+                {studentName}
               </AppText>
 
               <AppText
                 className="mt-1 text-[11px] font-medium"
                 style={{ color: heroMuted }}
               >
-                {DEMO_STUDENT_CREDENTIAL.studentId}
+                {studentId}
               </AppText>
             </View>
           </View>
@@ -403,7 +380,7 @@ export default function StudentIdScreen() {
                 style={{ color: heroText }}
                 numberOfLines={2}
               >
-                {DEMO_STUDENT_CREDENTIAL.collegeName}
+                {collegeName}
               </AppText>
             </View>
 
@@ -447,7 +424,7 @@ export default function StudentIdScreen() {
         {/* DEMO CREDENTIAL NOTICE */}
         {/* ====================================== */}
 
-        <View
+        {/* <View
           className="mt-4 flex-row items-start rounded-2xl p-3.5"
           style={{
             backgroundColor: "rgba(217,154,43,0.12)",
@@ -468,7 +445,7 @@ export default function StudentIdScreen() {
               not valid for actual campus entry.
             </AppText>
           </View>
-        </View>
+        </View> */}
 
         {/* ====================================== */}
         {/* VERIFICATION QR ACTION */}
@@ -523,7 +500,7 @@ export default function StudentIdScreen() {
         {/* CREDENTIAL INFORMATION */}
         {/* ====================================== */}
 
-        <View className="mt-7">
+        {/* <View className="mt-7">
           <AppText className="text-lg font-bold">
             Credential information
           </AppText>
@@ -573,7 +550,7 @@ export default function StudentIdScreen() {
               );
             })}
           </View>
-        </View>
+        </View> */}
 
         {/* ====================================== */}
         {/* HOW VERIFICATION WORKS */}
