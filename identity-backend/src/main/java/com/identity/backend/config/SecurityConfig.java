@@ -109,7 +109,7 @@ public class SecurityConfig {
                                 "/api/auth/web/logout"
                         ).permitAll()
 
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health", "/public/test").permitAll()
 
                         .requestMatchers("/api/super-admin/**")
                         .hasRole("SUPER_ADMIN")
