@@ -102,7 +102,11 @@ public class SecurityConfig {
                                 "/api/auth/admin/login",
                                 "/api/auth/student/activate",
                                 "/api/auth/refresh",
-                                "/api/auth/logout"
+                                "/api/auth/logout",
+                                "/api/auth/web/admin/login",
+                                "/api/auth/web/student/login",
+                                "/api/auth/web/refresh",
+                                "/api/auth/web/logout"
                         ).permitAll()
 
                         .requestMatchers("/actuator/health").permitAll()

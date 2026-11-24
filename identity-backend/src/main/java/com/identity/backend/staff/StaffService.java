@@ -5,6 +5,7 @@ import com.identity.backend.college.College;
 import com.identity.backend.college.CollegeRepository;
 import com.identity.backend.college.CollegeStatus;
 import com.identity.backend.staff.dto.CreateStaffRequest;
+import com.identity.backend.staff.dto.StaffProfileResponse;
 import com.identity.backend.staff.dto.StaffResponse;
 import com.identity.backend.user.AccountStatus;
 import com.identity.backend.user.User;
@@ -99,6 +100,52 @@ public class StaffService {
         User savedStaff = userRepository.save(staff);
 
         return mapToResponse(savedStaff);
+    }
+
+    @Transactional(readOnly = true)
+    public StaffProfileResponse getStaffProfile(
+            AuthenticatedUser authenticatedUser
+    ) {
+        if (authenticatedUser.role() != UserRole.STAFF) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only staff members can access this profile"
+            );
+        }
+
+        User staff = userRepository.findById(authenticatedUser.userId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Staff account not found"
+                ));
+
+        if (staff.getRole() != UserRole.STAFF) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Invalid staff account"
+            );
+        }
+
+        StaffProfileResponse.CollegeInfo collegeInfo = null;
+
+        if (staff.getCollege() != null) {
+            collegeInfo = new StaffProfileResponse.CollegeInfo(
+                    staff.getCollege().getId(),
+                    staff.getCollege().getCode(),
+                    staff.getCollege().getName()
+            );
+        }
+
+        return new StaffProfileResponse(
+                staff.getId(),
+                staff.getFullName(),
+                staff.getEmail(),
+                staff.getPhoneNumber(),
+                staff.getRole().name(),
+                staff.getStatus().name(),
+                collegeInfo,
+                staff.getCreatedAt()
+        );
     }
 
     private StaffResponse mapToResponse(User user) {
