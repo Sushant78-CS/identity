@@ -268,7 +268,7 @@ export default function StudentIdScreen() {
         >
           {/* Decorative background */}
 
-          <View
+          {/* <View
             pointerEvents="none"
             className="absolute -right-14 -top-16 h-52 w-52 rounded-full"
             style={{
@@ -282,7 +282,7 @@ export default function StudentIdScreen() {
             style={{
               backgroundColor: "rgba(255,255,255,0.07)",
             }}
-          />
+          /> */}
 
           {/* Card header */}
 
@@ -384,7 +384,7 @@ export default function StudentIdScreen() {
               </AppText>
             </View>
 
-            <View className="items-center">
+            {/* <View className="items-center">
               <ShieldCheck size={25} color={heroAccent} />
 
               <AppText
@@ -393,12 +393,12 @@ export default function StudentIdScreen() {
               >
                 DEMO
               </AppText>
-            </View>
+            </View> */}
           </View>
 
           {/* Credential footer */}
 
-          <View
+          {/* <View
             className="mt-5 flex-row items-center justify-between rounded-xl px-3 py-2.5"
             style={{
               backgroundColor: "rgba(255,255,255,0.12)",
@@ -417,7 +417,7 @@ export default function StudentIdScreen() {
             >
               SAMPLE
             </AppText>
-          </View>
+          </View> */}
         </View>
 
         {/* ====================================== */}

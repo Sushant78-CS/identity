@@ -2,20 +2,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTabBarStore } from "../../../features/student/stores/tab-bar.store";
 
 import {
-  Bell,
   BookOpen,
   CalendarDays,
   ChevronRight,
   CircleCheck,
   Ellipsis,
+  GraduationCap,
   IdCard,
-  Megaphone,
   QrCode,
-  Search,
   Share2,
   ShieldCheck,
   UserRound,
-  X,
+  Users,
 } from "lucide-react-native";
 
 import {
@@ -40,10 +38,10 @@ import {
   DigitalIdQrService,
   getQrErrorMessage,
 } from "@/features/digital-id/services/qr.service";
+import { UniVibeBottomSheet } from "@/features/discover/components/UniVibeBottomSheet";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { useRouter } from "expo-router";
 import type { ViewInstance } from "react-native";
-
 // const categories = ["Discover", "Announcements", "Events", "Campus services"];
 
 type HomeCategory = "Discover" | "Announcements" | "Events" | "Campus services";
@@ -219,6 +217,34 @@ export default function StudentDashboard() {
   const router = useRouter();
   const colors = theme.colors;
 
+  const [uniVibeVisible, setUniVibeVisible] = useState(false);
+  const [collegeChannelVisible, setCollegeChannelVisible] = useState(false);
+
+  const openUniVibe = () => {
+    setUniVibeVisible(true);
+  };
+
+  const closeUniVibe = () => {
+    setUniVibeVisible(false);
+  };
+
+  const openCollegeChannel = () => {
+    setCollegeChannelVisible(true);
+  };
+
+  // const openCollegeChannel = () => {
+  //   Alert.alert(
+  //     "College Channel",
+  //     "The College Channel is currently under development. Official college announcements and updates will be available here soon.",
+  //     [
+  //       {
+  //         text: "Got it",
+  //         style: "default",
+  //       },
+  //     ],
+  //   );
+  // };
+
   const backgroundCard = {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -256,16 +282,10 @@ export default function StudentDashboard() {
     });
   };
 
-  const secondaryBackground = {
-    backgroundColor: colors.surfaceSecondary,
-  };
-
   const user = useAuthStore((state) => state.user);
 
   const studentName = user?.fullName || "Student";
-  const firstName = studentName.split(" ")[0];
 
-  const [announcementVisible, setAnnouncementVisible] = useState(true);
   const [qrSheetVisible, setQrSheetVisible] = useState(false);
 
   const [qrStatus, setQrStatus] = useState<VerificationQrStatus>("loading");
@@ -292,8 +312,6 @@ export default function StudentDashboard() {
   const setTabBarVisible = useTabBarStore((state) => state.setVisible);
 
   const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const DEMO_QR_PAYLOAD = "IDENTITY-DEMO|STUDENT|TEST-ONLY|NOT-VALID-FOR-ENTRY";
 
   const clearScrollTimeout = () => {
     if (scrollTimeout.current) {
@@ -352,23 +370,62 @@ export default function StudentDashboard() {
   const heroMuted = "#D9E7FF";
   const heroAccent = "#FFD84D";
 
-  const handleShareIdentity = async () => {
-    setShowHomeMenu(false);
+  type ToastType = "success" | "error" | "warning" | "info";
+
+  const [toast, setToast] = useState<{
+    visible: boolean;
+    message: string;
+    type: ToastType;
+  }>({
+    visible: false,
+    message: "",
+    type: "success",
+  });
+
+  const hideToast = useCallback(() => {
+    setToast((previous) => ({
+      ...previous,
+      visible: false,
+    }));
+  }, []);
+
+  const enrollment = studentProfile?.enrollment;
+  const college = studentProfile?.college;
+
+  const handleShareStudentDetails = async () => {
+    const details = [
+      "IDENTITY - STUDENT DETAILS",
+      "",
+      `Full Name: ${studentName}`,
+      `Student ID: ${studentId}`,
+      `College: ${college?.name ?? "Not available"}`,
+      `College Code: ${college?.code ?? "Not available"}`,
+      `Department: ${enrollment?.department ?? "Not available"}`,
+      `Course: ${enrollment?.course ?? "Not available"}`,
+      `Admission Year: ${studentProfile?.admissionYear ?? "Not available"}`,
+      `Academic Year: ${enrollment?.academicYear ?? "Not available"}`,
+      `Semester: ${enrollment?.semester ?? "Not available"}`,
+      `Email: ${studentProfile?.email ?? "Not available"}`,
+      `Phone Number: ${studentProfile?.phoneNumber ?? "Not available"}`,
+    ].join("\n");
 
     try {
       await Share.share(
         {
-          title: "Share Identity",
-          message:
-            "Discover Identity — your digital campus platform for student identity, campus updates and verification.",
+          message: details,
+          title: "Student Details",
         },
         {
-          dialogTitle: "Share Identity",
-          subject: "Discover Identity",
+          dialogTitle: "Share Student Details",
+          subject: "Student Details",
         },
       );
     } catch {
-      // Display your existing AppToast error feedback here if needed.
+      setToast({
+        visible: true,
+        message: "Unable to share student details. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -552,7 +609,7 @@ export default function StudentDashboard() {
           </AppText>
 
           <View className="flex-row items-center gap-1">
-            <Pressable
+            {/* <Pressable
               onPress={() => router.navigate("/(student)/(screens)/search")}
               accessibilityRole="button"
               accessibilityLabel="Search"
@@ -560,9 +617,9 @@ export default function StudentDashboard() {
               className="h-10 w-10 items-center justify-center rounded-full"
             >
               <Search size={21} color={colors.textPrimary} />
-            </Pressable>
+            </Pressable> */}
 
-            <Pressable
+            {/* <Pressable
               onPress={() =>
                 router.navigate("/(student)/(screens)/notification")
               }
@@ -572,7 +629,7 @@ export default function StudentDashboard() {
               className="h-10 w-10 items-center justify-center rounded-full"
             >
               <Bell size={21} color={colors.textPrimary} />
-            </Pressable>
+            </Pressable> */}
 
             <View ref={menuButtonRef} collapsable={false}>
               <Pressable
@@ -638,7 +695,7 @@ export default function StudentDashboard() {
               }}
             >
               <Pressable
-                onPress={() => void handleShareIdentity()}
+                onPress={() => void handleShareStudentDetails()}
                 className="flex-row items-center px-4 py-4 active:opacity-60"
                 accessibilityRole="button"
                 accessibilityLabel="Share Identity"
@@ -667,7 +724,7 @@ export default function StudentDashboard() {
         >
           {/* Decorative shapes */}
 
-          <View
+          {/* <View
             pointerEvents="none"
             className="absolute -right-12 -top-14 h-52 w-52 rounded-full"
             style={{
@@ -681,7 +738,7 @@ export default function StudentDashboard() {
             style={{
               backgroundColor: "rgba(255,255,255,0.08)",
             }}
-          />
+          /> */}
 
           {/* Banner heading */}
 
@@ -696,23 +753,10 @@ export default function StudentDashboard() {
                 YOUR CAMPUS PLATFORM
               </AppText>
             </View>
-
-            {/* <AppText
-              className="text-[10px] font-semibold"
-              style={{ color: heroMuted }}
-            >
-              01 / 03
-            </AppText> */}
           </View>
 
           {/* QR quick access area */}
 
-          {/* <Pressable
-            onPress={() => setQrSheetVisible(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Open your campus verification QR"
-            className="mt-5 flex-row items-center active:opacity-80"
-          > */}
           <Pressable
             onPress={handleOpenQrSheet}
             accessibilityRole="button"
@@ -785,38 +829,6 @@ export default function StudentDashboard() {
 
         {/* CATEGORY CHIPS */}
 
-        {/* <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mt-5"
-          contentContainerClassName="gap-2 pr-2"
-        >
-          {categories.map((category, index) => (
-            <Pressable
-              key={category}
-              onPress={() => {
-                if (index !== 0) {
-                  showComingSoon(category);
-                }
-              }}
-              className="rounded-full px-4 py-3 active:opacity-70"
-              style={{
-                backgroundColor:
-                  index === 0 ? colors.textPrimary : colors.surfaceSecondary,
-              }}
-            >
-              <AppText
-                className="text-xs font-bold"
-                style={{
-                  color: index === 0 ? colors.inverse : colors.textPrimary,
-                }}
-              >
-                {category}
-              </AppText>
-            </Pressable>
-          ))}
-        </ScrollView> */}
-
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -855,68 +867,95 @@ export default function StudentDashboard() {
         </ScrollView>
 
         {/*  */}
-        {/* COLLEGE CHANNEL SHORTCUT */}
-        {activeCategory === "Discover" && (
-          <Pressable
-            onPress={() => router.push("/(student)/(screens)/college-channel")}
-            accessibilityRole="button"
-            accessibilityLabel="Open official College Channel"
-            className="mt-5 rounded-[23px] border p-4 active:opacity-80"
-            style={{
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            }}
-          >
-            <View className="flex-row items-center">
-              <View
-                className="mr-3 h-12 w-12 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: colors.primaryLight }}
-              >
-                <Megaphone size={22} color={colors.primary} />
-              </View>
 
-              <View className="flex-1">
-                <View className="flex-row items-center">
-                  <AppText className="text-[14px] font-extrabold">
-                    College Channel
+        {/* DISCOVER FEATURE CARDS */}
+        {activeCategory === "Discover" && (
+          <View className="mt-5 gap-3">
+            {/* COLLEGE CHANNEL */}
+            <Pressable
+              onPress={openCollegeChannel}
+              accessibilityRole="button"
+              accessibilityLabel="College Channel, coming soon"
+              className="rounded-[24px] p-4 active:opacity-75"
+              style={{ backgroundColor: colors.surfaceSecondary }}
+            >
+              <View className="flex-row items-center">
+                <GraduationCap
+                  size={23}
+                  color={colors.textPrimary}
+                  strokeWidth={1.8}
+                />
+
+                <AppText className="ml-3 flex-1 text-[15px] font-bold">
+                  College Channel
+                </AppText>
+
+                <View
+                  className="rounded-full px-2.5 py-1"
+                  style={{ backgroundColor: colors.surface }}
+                >
+                  <AppText
+                    className="text-[9px] font-bold"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    COMING SOON
                   </AppText>
-                  <ShieldCheck
-                    size={14}
-                    color={colors.success}
-                    style={{ marginLeft: 5 }}
-                  />
                 </View>
 
-                <AppText
-                  className="mt-1 text-[10px]"
-                  style={{ color: colors.textSecondary }}
-                >
-                  Official updates from your college
-                </AppText>
+                <ChevronRight
+                  size={18}
+                  color={colors.textMuted}
+                  style={{ marginLeft: 5 }}
+                />
               </View>
 
-              <ChevronRight size={20} color={colors.textSecondary} />
-            </View>
+              <AppText
+                className="mt-3 text-[12px] leading-[18px]"
+                style={{ color: colors.textSecondary }}
+              >
+                Get official college announcements, notices and updates in one
+                place.
+              </AppText>
+            </Pressable>
 
-            <View
-              className="mt-4 flex-row items-center justify-between border-t pt-3"
-              style={{ borderTopColor: colors.border }}
+            {/* UNIVIBE */}
+            <Pressable
+              onPress={openUniVibe}
+              accessibilityRole="button"
+              accessibilityLabel="Explore UniVibe"
+              className="rounded-[24px] p-4 active:opacity-75"
+              style={{ backgroundColor: colors.surfaceSecondary }}
             >
-              <AppText
-                className="text-[9px]"
-                style={{ color: colors.textMuted }}
-              >
-                Admin-only posts · Read-only for students
-              </AppText>
+              <View className="flex-row items-center">
+                <Users size={23} color={colors.textPrimary} strokeWidth={1.8} />
+
+                <AppText className="ml-3 flex-1 text-[15px] font-bold">
+                  UniVibe
+                </AppText>
+
+                <AppText
+                  className="text-[10px] font-bold"
+                  style={{ color: colors.textSecondary }}
+                >
+                  EXPLORE
+                </AppText>
+
+                <ChevronRight
+                  size={18}
+                  color={colors.textMuted}
+                  style={{ marginLeft: 5 }}
+                />
+              </View>
 
               <AppText
-                className="text-[10px] font-bold"
-                style={{ color: colors.primary }}
+                className="mt-3 text-[12px] leading-[18px]"
+                style={{ color: colors.textSecondary }}
               >
-                Open channel
+                Connect with fellow students, discover campus events and share
+                updates.
               </AppText>
-            </View>
-          </Pressable>
+            </Pressable>
+          </View>
         )}
 
         {/* ANNOUNCEMENTS FEED */}
@@ -944,252 +983,18 @@ export default function StudentDashboard() {
             serviceItems,
           )}
 
-        {/* ANNOUNCEMENT PANEL */}
-
-        {announcementVisible && (
-          <View
-            className="mt-5 rounded-[25px] p-5"
-            style={{
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-3">
-                <View
-                  className="h-10 w-10 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: "rgba(232,166,57,0.15)",
-                  }}
-                >
-                  <Megaphone size={20} color="#D99A2B" />
-                </View>
-
-                <AppText className="text-base font-bold">Campus Notice</AppText>
-              </View>
-
-              <Pressable
-                onPress={() => setAnnouncementVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Dismiss announcement"
-                hitSlop={10}
-                className="h-8 w-8 items-center justify-center rounded-full"
-                style={secondaryBackground}
-              >
-                <X size={17} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-
-            <AppText className="mt-3 text-sm font-medium leading-6">
-              Stay informed about important campus announcements and upcoming
-              academic activities.
-            </AppText>
-
-            <View className="mt-3 flex-row items-center">
-              <View
-                className="rounded-full px-2.5 py-1"
-                style={{
-                  backgroundColor: "rgba(217,154,43,0.13)",
-                }}
-              >
-                <AppText
-                  className="text-[9px] font-bold"
-                  style={{ color: "#D99A2B" }}
-                >
-                  SAMPLE NOTICE
-                </AppText>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* CAMPUS HIGHLIGHTS */}
-
-        {/* <View className="mt-7">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <AppText className="text-xl font-extrabold">
-                Campus highlights
-              </AppText>
-              <AppText color="muted" className="mt-1 text-[11px]">
-                Explore what's available to you
-              </AppText>
-            </View>
-
-            <Pressable
-              onPress={() => showComingSoon("Campus highlights")}
-              accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
-            >
-              <ChevronRight size={23} color={colors.textPrimary} />
-            </Pressable>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-4"
-            contentContainerClassName="gap-3 pr-2"
-          >
-            {highlights.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => showComingSoon(item.title)}
-                  accessibilityRole="button"
-                  className="w-[245px] rounded-[23px] border p-4 active:opacity-70"
-                  style={backgroundCard}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View
-                      className="h-11 w-11 items-center justify-center rounded-2xl"
-                      style={{
-                        backgroundColor: item.accentBackground,
-                      }}
-                    >
-                      <Icon size={21} color={item.accent} />
-                    </View>
-
-                    <View
-                      className="rounded-full px-2.5 py-1"
-                      style={{
-                        backgroundColor: item.accentBackground,
-                      }}
-                    >
-                      <AppText
-                        className="text-[9px] font-bold"
-                        style={{ color: item.accent }}
-                      >
-                        {item.category}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <AppText className="mt-5 text-base font-bold">
-                    {item.title}
-                  </AppText>
-
-                  <AppText
-                    color="secondary"
-                    className="mt-1 text-[11px] leading-[17px]"
-                  >
-                    {item.description}
-                  </AppText>
-
-                  <View className="mt-5 flex-row items-center">
-                    <AppText
-                      className="text-[11px] font-bold"
-                      style={{ color: item.accent }}
-                    >
-                      {item.action}
-                    </AppText>
-                    <ChevronRight
-                      size={14}
-                      color={item.accent}
-                      style={{ marginLeft: 3 }}
-                    />
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View> */}
-
-        {/* RECENT ACTIVITY */}
-
-        {/* <View className="mt-8">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <AppText className="text-xl font-extrabold">
-                Recent activity
-              </AppText>
-              <AppText color="muted" className="mt-1 text-[11px]">
-                Your recent campus interactions
-              </AppText>
-            </View>
-
-            <View
-              className="rounded-full px-2.5 py-1.5"
-              style={{
-                backgroundColor: "rgba(71,136,236,0.13)",
-              }}
-            >
-              <AppText
-                className="text-[9px] font-bold"
-                style={{ color: "#4788EC" }}
-              >
-                DEMO DATA
-              </AppText>
-            </View>
-          </View>
-
-          <View
-            className="mt-4 rounded-[23px] border p-4"
-            style={backgroundCard}
-          >
-            {recentActivities.map((activity, index) => {
-              const Icon = activity.icon;
-              const isLast = index === recentActivities.length - 1;
-
-              return (
-                <View key={activity.id} className="flex-row">
-                  <View className="mr-3 items-center">
-                    <View
-                      className="h-10 w-10 items-center justify-center rounded-full"
-                      style={{
-                        backgroundColor: activity.accentBackground,
-                      }}
-                    >
-                      <Icon size={18} color={activity.accent} />
-                    </View>
-
-                    {!isLast && (
-                      <View
-                        className="my-1 h-7 w-[1px]"
-                        style={{
-                          backgroundColor: colors.border,
-                        }}
-                      />
-                    )}
-                  </View>
-
-                  <View className="flex-1 pb-5">
-                    <AppText className="text-xs font-bold">
-                      {activity.title}
-                    </AppText>
-
-                    <AppText color="muted" className="mt-1 text-[10px]">
-                      {activity.description}
-                    </AppText>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View> */}
-
         {/* FOOTER */}
 
         <View className="mt-8 items-center">
-          {/* <AppText
+          <AppText
             color="muted"
             className="text-[9px] font-semibold tracking-[2px]"
           >
             IDENTITY • CAMPUS PLATFORM
-          </AppText> */}
+          </AppText>
         </View>
       </ScrollView>
-      {/* <StudentQrBottomSheet
-        visible={qrSheetVisible}
-        onClose={() => setQrSheetVisible(false)}
-        status="error"
-        studentName={studentName}
-        studentId={user?.studentId ?? "Not available"}
-        errorMessage="Your live verification QR is not available yet."
-      /> */}
+
       <StudentQrBottomSheet
         visible={qrSheetVisible}
         onClose={handleCloseQrSheet}
@@ -1204,6 +1009,78 @@ export default function StudentDashboard() {
         isRefreshing={isRefreshingQr}
         errorMessage={qrErrorMessage}
       />
+      <UniVibeBottomSheet
+        visible={uniVibeVisible}
+        onClose={() => setUniVibeVisible(false)}
+      />
+      <Modal
+        visible={collegeChannelVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setCollegeChannelVisible(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/60 px-6">
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setCollegeChannelVisible(false)}
+          />
+
+          <View
+            className="w-full rounded-3xl p-6"
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View
+              className="mb-4 h-14 w-14 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: colors.surfaceSecondary }}
+            >
+              <GraduationCap size={27} color={colors.textPrimary} />
+            </View>
+
+            <AppText className="text-xl font-extrabold">
+              College Channel
+            </AppText>
+
+            <AppText
+              className="mt-2 text-sm leading-6"
+              style={{ color: colors.textSecondary }}
+            >
+              The College Channel is currently under development. Official
+              college announcements, notices and updates will be available here
+              soon.
+            </AppText>
+
+            <View
+              className="mt-5 self-start rounded-full px-3 py-1.5"
+              style={{ backgroundColor: colors.surfaceSecondary }}
+            >
+              <AppText
+                className="text-[10px] font-bold"
+                style={{ color: colors.textSecondary }}
+              >
+                COMING SOON
+              </AppText>
+            </View>
+
+            <Pressable
+              onPress={() => setCollegeChannelVisible(false)}
+              className="mt-6 h-12 items-center justify-center rounded-xl"
+              style={{ backgroundColor: colors.textPrimary }}
+            >
+              <AppText
+                className="text-sm font-bold"
+                style={{ color: colors.background }}
+              >
+                Got it
+              </AppText>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
