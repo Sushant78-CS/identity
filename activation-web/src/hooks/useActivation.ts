@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import { activateStudent } from "../services/api";
 
 export function useActivation() {
@@ -19,30 +20,33 @@ export function useActivation() {
       });
 
       setSuccess(true);
-
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       let message = "Something went wrong. Please try again.";
 
-      if (err) {
-        if (err.status === 401 || err.status === 400) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+
+        if (status === 400 || status === 401) {
           message =
             "This activation link is invalid, expired, or has already been used. Please contact your college administrator for assistance.";
-        } else if (err.status === 403) {
+        } else if (status === 403) {
           message =
             "Activation is currently not permitted. Please contact your college administrator.";
-        } else if (err.status >= 500) {
+        } else if (status && status >= 500) {
           message =
             "Our servers are temporarily unavailable. Please try again later.";
+        } else if (!err.response) {
+          message =
+            "Unable to connect to the server. Please check your internet connection.";
         } else {
-          message = err.message;
+          message = err.response.data?.message ?? err.message ?? message;
         }
       } else if (err instanceof Error) {
         message = err.message;
       }
 
       setError(message);
-
       return false;
     } finally {
       setLoading(false);

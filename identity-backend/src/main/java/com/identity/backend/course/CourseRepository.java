@@ -42,4 +42,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             String name,
             Long departmentId
     );
+
+    long countByDepartmentIdIn(Collection<Long> departmentIds);
 }

@@ -39,6 +39,11 @@ import { AppToast } from "@/components/shared/AppToast";
 import { AppText } from "@/components/ui/AppText";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useTabBarStore } from "@/features/student/stores/tab-bar.store";
+import {
+  beginExternalActivity,
+  endExternalActivity,
+} from "@/services/app-lifecycle-guard";
+import { clearBiometricPreference } from "@/services/storage/biometric-storage";
 import { useAppTheme } from "@/theme/useAppTheme";
 
 type Theme = ReturnType<typeof useAppTheme>["theme"];
@@ -161,6 +166,7 @@ export default function ProfileScreen() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const user = useAuthStore((state) => state.user);
+  const userId = user?.userId;
   const studentProfile = useAuthStore((state) => state.studentProfile);
 
   const fetchStudentProfile = useAuthStore(
@@ -204,6 +210,10 @@ export default function ProfileScreen() {
     setIsSigningOut(true);
 
     try {
+      if (userId != null) {
+        await clearBiometricPreference(userId);
+      }
+
       await logout();
       setShowSignOutSheet(false);
     } finally {
@@ -333,6 +343,8 @@ export default function ProfileScreen() {
   };
 
   const handleShareStudentDetails = async () => {
+    beginExternalActivity();
+
     const details = [
       "IDENTITY - STUDENT DETAILS",
       "",
@@ -366,6 +378,8 @@ export default function ProfileScreen() {
         message: "Unable to share student details. Please try again.",
         type: "error",
       });
+    } finally {
+      endExternalActivity();
     }
   };
 

@@ -37,4 +37,6 @@ public interface DepartmentRepository
             String name,
             Long collegeId
     );
+
+    long countByCollegeId(Long collegeId);
 }

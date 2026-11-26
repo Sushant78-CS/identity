@@ -1,4 +1,5 @@
 package com.identity.backend.auth.activation;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ActivationEmailRecoveryService {
 
     private static final Logger log =
@@ -17,12 +19,6 @@ public class ActivationEmailRecoveryService {
     private static final int PROCESSING_TIMEOUT_MINUTES = 10;
 
     private final ActivationEmailOutboxRepository outboxRepository;
-
-    public ActivationEmailRecoveryService(
-            ActivationEmailOutboxRepository outboxRepository
-    ) {
-        this.outboxRepository = outboxRepository;
-    }
 
     @Scheduled(fixedDelay = 60000)
     @Transactional

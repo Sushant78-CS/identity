@@ -1,6 +1,8 @@
 package com.identity.backend.verification;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,5 +23,18 @@ public interface StudentVerificationLogRepository
             Long staffUserId,
             Instant start,
             Instant end
+    );
+
+    @Query("""
+            SELECT COUNT(log)
+            FROM StudentVerificationLog log
+            WHERE log.college.id = :collegeId
+            AND log.verifiedAt >= :start
+            AND log.verifiedAt < :end
+            """)
+    long countByCollegeAndVerifiedAtRange(
+            @Param("collegeId") Long collegeId,
+            @Param("start") Instant start,
+            @Param("end") Instant end
     );
 }

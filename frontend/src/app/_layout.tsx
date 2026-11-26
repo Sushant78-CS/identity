@@ -11,6 +11,7 @@ import { AppModal } from "@/components/shared/AppModal";
 import { AppText } from "@/components/ui/AppText";
 import { BiometricService } from "@/features/auth/services/biometric.service";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { shouldSuppressAppLock } from "@/services/app-lifecycle-guard";
 import {
   clearBiometricPreference,
   getBiometricEnabled,
@@ -106,8 +107,10 @@ export default function RootLayout() {
 
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (nextState === "inactive" || nextState === "background") {
-        // Do not treat the native biometric prompt as leaving the app.
-        if (!BiometricService.isAuthenticationInProgress()) {
+        if (
+          !BiometricService.isAuthenticationInProgress() &&
+          !shouldSuppressAppLock()
+        ) {
           wasAwayFromApp = true;
         }
 
@@ -273,13 +276,6 @@ export default function RootLayout() {
           style={{ backgroundColor: colors.background }}
         >
           <ActivityIndicator size="large" color={colors.primary} />
-
-          {/* <AppText
-            className="mt-5 text-sm font-medium"
-            style={{ color: colors.textSecondary }}
-          >
-            Checking your session...
-          </AppText> */}
         </SafeAreaView>
       )}
 

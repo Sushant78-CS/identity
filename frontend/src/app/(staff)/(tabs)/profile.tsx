@@ -15,7 +15,6 @@ import {
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -30,6 +29,7 @@ import { AppText } from "@/components/ui/AppText";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { StaffService } from "@/features/staff/services/staff.service";
 import type { StaffProfileResponse } from "@/features/staff/types/staff.types";
+import { clearBiometricPreference } from "@/services/storage/biometric-storage";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { Href, useRouter } from "expo-router";
 
@@ -137,7 +137,8 @@ export default function StaffProfileScreen() {
   const { theme, isDark } = useAppTheme();
   const colors = theme.colors;
 
-  const logout = useAuthStore((state) => state.logout);
+  // const logout = useAuthStore((state) => state.logout);
+  const { user, logout } = useAuthStore();
 
   const [profile, setProfile] = useState<StaffProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,6 +154,10 @@ export default function StaffProfileScreen() {
     setIsSigningOut(true);
 
     try {
+      if (user?.userId != null) {
+        await clearBiometricPreference(user.userId);
+      }
+
       await logout();
       setShowSignOutSheet(false);
     } finally {
@@ -188,31 +193,6 @@ export default function StaffProfileScreen() {
     setRefreshing(true);
     await fetchProfile();
     setRefreshing(false);
-  };
-
-  const handleLogout = () => {
-    Alert.alert(
-      "Sign out",
-      "Are you sure you want to sign out of your account?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Sign out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setLoggingOut(true);
-              await logout();
-            } finally {
-              setLoggingOut(false);
-            }
-          },
-        },
-      ],
-    );
   };
 
   if (loading) {

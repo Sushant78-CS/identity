@@ -4,7 +4,7 @@ import com.identity.backend.auth.activation.dto.ActivationResponse;
 import com.identity.backend.student.Student;
 import com.identity.backend.user.AccountStatus;
 import com.identity.backend.user.User;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +21,7 @@ import java.util.Base64;
 import java.util.HexFormat;
 
 @Service
+@RequiredArgsConstructor
 public class StudentActivationService {
 
     private final StudentActivationRepository activationRepository;
@@ -31,16 +32,6 @@ public class StudentActivationService {
 
     @Value("${app.frontend.activation-url}")
     private String activationUrl;
-
-    public StudentActivationService(
-            StudentActivationRepository activationRepository,
-            ActivationEmailOutboxRepository outboxRepository,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.activationRepository = activationRepository;
-        this.outboxRepository = outboxRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Transactional
     public ActivationResponse activateStudent(

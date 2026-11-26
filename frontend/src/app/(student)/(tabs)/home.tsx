@@ -39,6 +39,10 @@ import {
   getQrErrorMessage,
 } from "@/features/digital-id/services/qr.service";
 import { UniVibeBottomSheet } from "@/features/discover/components/UniVibeBottomSheet";
+import {
+  beginExternalActivity,
+  endExternalActivity,
+} from "@/services/app-lifecycle-guard";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { useRouter } from "expo-router";
 import type { ViewInstance } from "react-native";
@@ -393,6 +397,9 @@ export default function StudentDashboard() {
   const college = studentProfile?.college;
 
   const handleShareStudentDetails = async () => {
+    setShowHomeMenu(false);
+
+    beginExternalActivity();
     const details = [
       "IDENTITY - STUDENT DETAILS",
       "",
@@ -426,6 +433,8 @@ export default function StudentDashboard() {
         message: "Unable to share student details. Please try again.",
         type: "error",
       });
+    } finally {
+      endExternalActivity();
     }
   };
 
